@@ -1,0 +1,7 @@
+.{
+    .name = .steam_zig,
+    .version = "0.0.1",
+    .minimum_zig_version = "0.16.0",
+    .paths = .{""},
+    .fingerprint = 0xd158aef211db5574,
+}
