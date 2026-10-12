@@ -27,8 +27,23 @@ pub const Client = struct {
         return AuthTicket.init(data, handle);
     }
 
-    pub fn getAuthWebTicket(_: *Client, service_identity: [*c]const u8) void {
-        steam.SWS_SteamAPI_ISteamUser_GetAuthTicketForWebApi(service_identity);
+    // Make a zig manual dispatch loop since we can only support manual dispatch in zig (based on IO and or a loop that stacks up queue as dict and can be pulled from by ID)
+    pub fn getAuthWebTicket(_: *Client, service_identity: [*c]const u8) u32 {
+        steam.SWS_Steam_ManualDispatch_Init();
+        const handle = steam.SWS_SteamAPI_ISteamUser_GetAuthTicketForWebApi(service_identity);
+
+        while (true) {
+            const pipe = steam.SWS_Steam_GetHSteamPipe();
+            steam.SWS_Steam_ManualDispatch_RunFrame(pipe);
+
+            while (steam.SWS_Steam_ManualDispatch_GetNextCallback(pipe)) {
+                defer steam.SWS_Steam_ManualDispatch_FreeLastCallback(pipe);
+                const callback_id = steam.SWS_Steam_ManualDispatch_GetCallbackID();
+                std.log.debug("callback {}", .{callback_id});
+            }
+        }
+
+        return handle;
     }
 
     pub fn hasFriend(_: *Client, friend_id: u64) bool {
