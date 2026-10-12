@@ -27,6 +27,7 @@ pub const Client = struct {
         return AuthTicket.init(data, handle);
     }
 
+    // Ensure generated header files has an enum for ALL callback ids
     // Make a zig manual dispatch loop since we can only support manual dispatch in zig (based on IO and or a loop that stacks up queue as dict and can be pulled from by ID)
     pub fn getAuthWebTicket(_: *Client, service_identity: [*c]const u8) u32 {
         steam.SWS_Steam_ManualDispatch_Init();
