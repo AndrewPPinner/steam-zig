@@ -27,6 +27,40 @@ pub const Client = struct {
         return AuthTicket.init(data, handle);
     }
 
+    pub fn getFriendCount(_: *Client) i32 {
+        const flag = steam.SWS_Steam_FriendFlagAll();
+        return steam.SWS_SteamAPI_ISteamFriends_GetFriendCount(flag);
+    }
+
+    pub fn getFriendIdByIndex(_: *Client, index: i32) u64 {
+        const flag = steam.SWS_Steam_FriendFlagAll();
+        return steam.SWS_SteamAPI_ISteamFriends_GetFriendByIndex(index, flag);
+        // return steam.SWS_Steam_Friends_GetFriendByIndexImmediate(index);
+    }
+
+    pub fn getFriendDetailById(_: *Client, friend_id: u64) FriendDetail {
+        const name = steam.SWS_SteamAPI_ISteamFriends_GetFriendPersonaName(friend_id);
+        const status = steam.SWS_SteamAPI_ISteamFriends_GetFriendPersonaState(friend_id);
+        const game_id = steam.SWS_Steam_Friends_GetFriendGameID(friend_id);
+
+        return .{
+            .friend_status = status,
+            .persona_name = name,
+            .game_id = game_id,
+        };
+    }
+
+    // Need to confirm how this looks to the user and how this gets passed to the launch commands of the game
+    // I need to encode certain things in the launch command (lobby_code and random password if invite only || Can pull invite only out of DB)
+    pub fn inviteFriend(_: *Client, friend_id: u64, connect_command: [*c]const u8) bool {
+        return steam.SWS_SteamAPI_ISteamFriends_InviteUserToGame(friend_id, connect_command);
+    }
+
+    pub fn getFriendQueryBuilder(self: *Client) void {
+        _ = self.getFriendCount();
+        //Return a filtered down version of friends based on query struct (status, name, game, etc) caching the entire friends list on the client or friend query builder
+    }
+
     // Ensure generated header files has an enum for ALL callback ids
     // Make a zig manual dispatch loop since we can only support manual dispatch in zig (based on IO and or a loop that stacks up queue as dict and can be pulled from by ID)
     pub fn getAuthWebTicket(_: *Client, service_identity: [*c]const u8) u32 {
@@ -54,6 +88,12 @@ pub const Client = struct {
     pub fn deinit(_: *Client) void {
         steam.SWS_Steam_Shutdown();
     }
+};
+
+pub const FriendDetail = struct {
+    persona_name: [*c]const u8,
+    friend_status: i32,
+    game_id: u64,
 };
 
 pub const AuthTicket = struct {

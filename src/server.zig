@@ -4,6 +4,5 @@ const steam = @import("steamz");
 pub const Common = @import("common.zig");
 
 pub const Server = struct {
-    pub fn init() !Server {
-    }
+    pub fn init() !Server {}
 };
